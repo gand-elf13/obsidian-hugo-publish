@@ -141,7 +141,7 @@ const transform_wiki_image_on_parent = (node: Parent) => {
         const child = node.children[i];
         if (child.type == "text") {
             const text = child.value.slice(); // clone
-            const regex = /!\[\[(.*?)\]\]/g;
+            const regex = /!\[\[([^|]+)(?:\|([^\]]+))?\]\]/g;
             let match;
             let last_index = 0;
             let after_text = text.slice();
@@ -183,12 +183,13 @@ const transform_wiki_link_on_parent = (node: Parent) => {
         const child = node.children[i];
         if (child.type == "text") {
             const text = child.value.slice(); // clone
-            const regex = /\[\[(.*?)\]\]/g;
+            const regex = /\[\[([^|]+)(?:\|([^\]]+))?\]\]/g;
             let match;
             let last_index = 0;
             let after_text = text.slice();
             while ((match = regex.exec(text)) != null) {
                 const link_text = match[1];
+                const alias = match[2];
                 const image_url = link_text;
 
                 const before_text = text.slice(last_index, match.index);
@@ -200,7 +201,7 @@ const transform_wiki_link_on_parent = (node: Parent) => {
                 }
                 const link_txt: Text = {
                     type: "text",
-                    value: image_url
+                    value: alias || link_text
                 };
                 const v: Link = {
                     type: 'link',
