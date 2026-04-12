@@ -238,8 +238,18 @@ export default class HugoPublishPlugin extends Plugin {
 					if (v) {
 						const [vv, is_md] = v;
 						if (is_md) {
-							// inner md link:  [[abc]] -> [](/abc) -> https://www.blog.com/abc
-							node.url = encodeURI(path.join("/", vv).replace(/\\/g, '/'));
+							// Slugify each path segment to match Hugo's URL format
+							const slugified = vv
+								.split('/')
+								.map((segment: string) => segment
+									.normalize('NFD')
+									.replace(/[\u0300-\u036f]/g, '')
+									.toLowerCase()
+									.replace(/\s+/g, '-')
+									.replace(/[^\w-]/g, '')
+								)
+								.join('/');
+							node.url = encodeURI(path.join("/", slugified).replace(/\\/g, '/'));
 						} else {
 							node.url = encodeURI(path.join("/", static_dir, vv).replace(/\\/g, '/'));
 						}
