@@ -209,12 +209,12 @@ export default class HugoPublishPlugin extends Plugin {
 				if (meta?.links) {
 					for (const v of meta.links) {
 						const link_f = this.app.metadataCache.getFirstLinkpathDest(v.link, f.path);
-						//console.log("link", v.link, link_f);
 						if (link_f) {
-							let is_md = false;
 							if (link_f.path.endsWith(".md")) {
-								is_md = true;
-								link2path.set(v.link, [v.link, is_md]);
+								// Use the full resolved path without .md instead of just v.link
+								// so Hugo gets /post/note-slug instead of /note-title
+								const resolved_path = link_f.path.replace(/\.md$/, "");
+								link2path.set(v.link, [resolved_path, true]);
 							}
 						}
 					}
