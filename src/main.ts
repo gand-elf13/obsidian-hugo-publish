@@ -242,11 +242,8 @@ export default class HugoPublishPlugin extends Plugin {
 							const slugified = vv
 								.split('/')
 								.map((segment: string) => segment
-									.normalize('NFD')
-									.replace(/[\u0300-\u036f]/g, '')
 									.toLowerCase()
 									.replace(/\s+/g, '-')
-									.replace(/[^\w-]/g, '')
 								)
 								.join('/');
 							node.url = encodeURI(path.join("/", slugified).replace(/\\/g, '/'));
