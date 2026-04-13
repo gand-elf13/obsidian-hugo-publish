@@ -229,26 +229,37 @@ export default class HugoPublishPlugin extends Plugin {
 						node.url = encodeURI(path.join("/", static_dir, vv).replace(/\\/g, '/'));
 					}
 				})
-				visit(ast, 'link', function (node, index, parent) {
+				visit(ast, 'link', function (node: any, index: any, parent: any) {
 					const decoded_url = decodeURI(node.url);
-					const v = link2path.get(decoded_url)
+					const v = link2path.get(decoded_url);
 					if (v) {
 						const [vv, is_md] = v;
 						if (is_md) {
-							// Slugify each path segment to match Hugo's URL format
-							const slugified = vv
-								.split('/')
-								.map((segment: string) => segment
-									.toLowerCase()
-									.replace(/\s+/g, '-')
-								)
-								.join('/');
-							node.url = encodeURI(path.join("/", slugified).replace(/\\/g, '/'));
+							let resolved = vv;
+
+							// apply slugification if enabled
+							if (this.settings.slugify_paths) {
+								resolved = resolved
+									.split('/')
+									.map((segment: string) => segment
+										.toLowerCase()
+										.replace(/\s+/g, '-')
+									)
+									.join('/');
+							}
+
+							// prepend content root if set
+							const root = this.settings.content_root.replace(/^\/|\/$/g, '');
+							if (root.length > 0) {
+								resolved = root + '/' + resolved;
+							}
+
+							node.url = encodeURI(path.join("/", resolved).replace(/\\/g, '/'));
 						} else {
 							node.url = encodeURI(path.join("/", static_dir, vv).replace(/\\/g, '/'));
 						}
 					}
-				})
+				}.bind(this))
 
 				// body = remark.stringify(ast);
 				body = toMarkdown(ast, { extensions: [mathToMarkdown(), gfmTableToMarkdown()] });

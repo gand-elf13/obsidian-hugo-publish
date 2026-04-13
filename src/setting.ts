@@ -11,6 +11,8 @@ export interface HugoPublishSettings {
     blog_dir: string; // relative path to site_dir
     static_dir: string; // relative path to site_dir/static
     keep_list: string;
+    slugify_paths: boolean;
+    content_root: string;
     get_exclude_dir: () => string[];
     get_blog_abs_dir: () => string;
     get_static_abs_dir: () => string;
@@ -46,7 +48,9 @@ export const DEFAULT_SETTINGS: HugoPublishSettings = {
         }
         return regs;
     },
-    export_blog_tag: true
+    export_blog_tag: true,
+    slugify_paths: false,
+    content_root: ""
 }
 
 export class HugoPublishSettingTab extends PluginSettingTab {
@@ -102,6 +106,26 @@ export class HugoPublishSettingTab extends PluginSettingTab {
                 this.plugin.settings.keep_list = value;
                 await this.plugin.saveSettings();
             }));
+		new Setting(containerEl)
+			.setName("slugify paths")
+			.setDesc("Convert link paths to Hugo-compatible slugs (lowercase, spaces to hyphens). Enable if your Hugo site uses default permalink settings.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.slugify_paths)
+				.onChange(async (value) => {
+					this.plugin.settings.slugify_paths = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName("content root")
+			.setDesc("Prepend this path to all internal links. Use if your content lives in a subdirectory (e.g. 'post'). Leave empty if content is at site root.")
+			.addText(text => text
+				.setPlaceholder("post")
+				.setValue(this.plugin.settings.content_root)
+				.onChange(async (value) => {
+					this.plugin.settings.content_root = value;
+					await this.plugin.saveSettings();
+				}));
     }
 }
 
