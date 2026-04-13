@@ -209,12 +209,12 @@ export default class HugoPublishPlugin extends Plugin {
 				if (meta?.links) {
 					for (const v of meta.links) {
 						const link_f = this.app.metadataCache.getFirstLinkpathDest(v.link, f.path);
-						//console.log("link", v.link, link_f);
 						if (link_f) {
-							let is_md = false;
 							if (link_f.path.endsWith(".md")) {
-								is_md = true;
-								link2path.set(v.link, [v.link, is_md]);
+								// Use the full resolved path without .md instead of just v.link
+								// so Hugo gets /post/note-slug instead of /note-title
+								const resolved_path = link_f.path.replace(/\.md$/, "");
+								link2path.set(v.link, [resolved_path, true]);
 							}
 						}
 					}
@@ -238,8 +238,15 @@ export default class HugoPublishPlugin extends Plugin {
 					if (v) {
 						const [vv, is_md] = v;
 						if (is_md) {
-							// inner md link:  [[abc]] -> [](/abc) -> https://www.blog.com/abc
-							node.url = encodeURI(path.join("/", vv).replace(/\\/g, '/'));
+							// Slugify each path segment to match Hugo's URL format
+							const slugified = vv
+								.split('/')
+								.map((segment: string) => segment
+									.toLowerCase()
+									.replace(/\s+/g, '-')
+								)
+								.join('/');
+							node.url = encodeURI(path.join("/", slugified).replace(/\\/g, '/'));
 						} else {
 							node.url = encodeURI(path.join("/", static_dir, vv).replace(/\\/g, '/'));
 						}
