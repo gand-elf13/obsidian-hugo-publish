@@ -13,6 +13,7 @@ export interface HugoPublishSettings {
     keep_list: string;
     slugify_paths: boolean;
     content_root: string;
+    resolve_full_path: boolean;
     get_exclude_dir: () => string[];
     get_blog_abs_dir: () => string;
     get_static_abs_dir: () => string;
@@ -50,7 +51,8 @@ export const DEFAULT_SETTINGS: HugoPublishSettings = {
     },
     export_blog_tag: true,
     slugify_paths: false,
-    content_root: ""
+    content_root: "",
+    resolve_full_path: false
 }
 
 export class HugoPublishSettingTab extends PluginSettingTab {
@@ -124,6 +126,15 @@ export class HugoPublishSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.content_root)
 				.onChange(async (value) => {
 					this.plugin.settings.content_root = value;
+					await this.plugin.saveSettings();
+				}));
+		new Setting(containerEl)
+			.setName("resolve full path")
+			.setDesc("Resolve wikilinks to their full vault path instead of just the note name. Enable if your Hugo content is organized in subdirectories (e.g. post/my-note instead of my-note).")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.resolve_full_path)
+				.onChange(async (value) => {
+					this.plugin.settings.resolve_full_path = value;
 					await this.plugin.saveSettings();
 				}));
     }

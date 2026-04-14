@@ -211,7 +211,12 @@ export default class HugoPublishPlugin extends Plugin {
 						const link_f = this.app.metadataCache.getFirstLinkpathDest(v.link, f.path);
 						if (link_f) {
 							if (link_f.path.endsWith(".md")) {
-								link2path.set(v.link, [v.link, true]);
+								if (this.settings.resolve_full_path) {
+									const resolved_path = link_f.path.replace(/\.md$/, "");
+									link2path.set(v.link, [resolved_path, true]);
+								} else {
+									link2path.set(v.link, [v.link, true]);
+								}
 							}
 						}
 					}
