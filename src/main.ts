@@ -249,6 +249,7 @@ export default class HugoPublishPlugin extends Plugin {
 									.map((segment: string) => segment
 										.toLowerCase()
 										.replace(/\s+/g, '-')
+										.replace(/[(),.]/g, '')
 									)
 									.join('/');
 							}
