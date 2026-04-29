@@ -99,7 +99,7 @@ export const get_md_yaml_header_from_content = (content: string): [string, strin
         }
         return [header, body]
     } else {
-        // no hefader
+        // no header
         return ["", content]
     }
 }
@@ -115,6 +115,8 @@ export const transform_better_latex = (ast: Root) => {
 }
 
 // ![[xxx.png]] -> ![xxx.png](xxx.png)
+// ![[xxx.png|400]] -> {{< figure src="..." width="400" >}}
+// ![[xxx.png|640x480]] -> {{< figure src="..." width="640" height="480" >}}
 export const transform_wiki_image = (ast: Root) => {
     visit(ast, 'paragraph', function (node, index, parent) {
         transform_wiki_image_on_parent(node);
@@ -147,6 +149,7 @@ const transform_wiki_image_on_parent = (node: Parent) => {
             let after_text = text.slice();
             while ((match = regex.exec(text)) != null) {
                 const link_text = match[1];
+                const size_hint = match[2]; // e.g. "468" or "640x480"
                 const image_url = link_text;
 
                 const before_text = text.slice(last_index, match.index);
@@ -156,15 +159,32 @@ const transform_wiki_image_on_parent = (node: Parent) => {
                     const v: Text = { type: "text", value: before_text };
                     new_children.push(v);
                 }
-                const v: Image = {
-                    type: 'image',
-                    url: encodeURI(image_url),
-                    alt: image_url,
-                    title: null
-                };
-                new_children.push(v);
-                last_index = match.index + match[0].length;
 
+                if (size_hint && /^\d+(x\d+)?$/.test(size_hint.trim())) {
+                    // Has a numeric dimension hint — use hugoFigure flag so the
+                    // image visitor in main.ts can emit a figure shortcode after
+                    // resolving the final URL. Store width/height in the node.
+                    const parts = size_hint.trim().split('x');
+                    const v: any = {
+                        type: 'image',
+                        url: encodeURI(image_url),
+                        alt: image_url,
+                        title: null,
+                        hugoFigure: true,
+                        figureWidth: parts[0],
+                        figureHeight: parts[1] ?? null,
+                    };
+                    new_children.push(v);
+                } else {
+                    const v: Image = {
+                        type: 'image',
+                        url: encodeURI(image_url),
+                        alt: image_url,
+                        title: null
+                    };
+                    new_children.push(v);
+                }
+                last_index = match.index + match[0].length;
             }
             if (after_text.length > 0) {
                 const v: Text = { type: "text", value: after_text };

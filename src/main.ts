@@ -225,13 +225,34 @@ export default class HugoPublishPlugin extends Plugin {
 
 				//console.log("this", this);
 				//console.log("link2path", link2path, "meta", meta)
-				visit(ast, 'image', function (node, index, parent) {
+				visit(ast, 'image', function (node: any, index: any, parent: any) {
 					const decoded_url = decodeURI(node.url);
 					const v = link2path.get(decoded_url)
 					if (v) {
 						// eslint-disable-next-line @typescript-eslint/no-unused-vars
 						const [vv, _is_md] = v;
-						node.url = encodeURI(path.join("/", static_dir, vv).replace(/\\/g, '/'));
+						const resolved_url = encodeURI(path.join("/", static_dir, vv).replace(/\\/g, '/'));
+
+						if (node.hugoFigure) {
+							// Convert to a raw Hugo figure shortcode
+							const width: string = node.figureWidth;
+							const height: string | null = node.figureHeight;
+							let shortcode = `{{< figure src="${resolved_url}" alt="${node.alt}"`;
+							if (width) shortcode += ` width="${width}"`;
+							if (height) shortcode += ` height="${height}"`;
+							shortcode += ` >}}`;
+							// Mutate in-place to an html node
+							node.type = 'html';
+							node.value = shortcode;
+							delete node.url;
+							delete node.alt;
+							delete node.title;
+							delete node.hugoFigure;
+							delete node.figureWidth;
+							delete node.figureHeight;
+						} else {
+							node.url = resolved_url;
+						}
 					}
 				})
 				visit(ast, 'link', function (node: any, index: any, parent: any) {
