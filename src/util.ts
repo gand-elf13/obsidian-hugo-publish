@@ -141,7 +141,11 @@ const transform_wiki_image_on_parent = (node: Parent) => {
     const new_children = [];
     for (let i = 0; i < node.children.length; i++) {
         const child = node.children[i];
-        if (child.type == "text") {
+        if (child.type === "strong" || child.type === "emphasis") {
+            // Recurse so that **![[img]]** and *![[img]]* are handled
+            transform_wiki_image_on_parent(child as Parent);
+            new_children.push(child);
+        } else if (child.type == "text") {
             const text = child.value.slice(); // clone
             const regex = /!\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
             let match;
@@ -201,7 +205,11 @@ const transform_wiki_link_on_parent = (node: Parent) => {
     const new_children = [];
     for (let i = 0; i < node.children.length; i++) {
         const child = node.children[i];
-        if (child.type == "text") {
+        if (child.type === "strong" || child.type === "emphasis") {
+            // Recurse so that **[[link]]** and *[[link]]* are handled
+            transform_wiki_link_on_parent(child as Parent);
+            new_children.push(child);
+        } else if (child.type == "text") {
             const text = child.value.slice(); // clone
             const regex = /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
             let match;
