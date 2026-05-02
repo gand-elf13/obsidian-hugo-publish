@@ -206,6 +206,21 @@ export default class HugoPublishPlugin extends Plugin {
 					}
 
 				}
+
+				// copy frontmatter image field to static dir and rewrite its path
+				if (hv && hv["image"]) {
+					const img_name = hv["image"];
+					const img_f = this.app.metadataCache.getFirstLinkpathDest(img_name, f.path);
+					if (img_f) {
+						const src = path.join(this.base_path, img_f.path);
+						const dst = path.join(this.settings.get_static_abs_dir(), img_f.path);
+						await util.copy_file(src, dst);
+						const static_dir = this.settings.static_dir;
+						hv["image"] = encodeURI(path.join("/", static_dir, img_f.path).replace(/\\/g, '/'));
+						// re-stringify header with updated image path
+						header = stringifyYaml(hv);
+					}
+				}
 				if (meta?.links) {
 					for (const v of meta.links) {
 						const link_f = this.app.metadataCache.getFirstLinkpathDest(v.link, f.path);
@@ -322,4 +337,3 @@ class HugoPublishModal extends Modal {
 		contentEl.empty();
 	}
 }
-
