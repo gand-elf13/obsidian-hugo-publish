@@ -204,7 +204,6 @@ export default class HugoPublishPlugin extends Plugin {
 							await util.copy_file(src, dst);
 						}
 					}
-
 				}
 
 				// copy frontmatter image field to static dir and rewrite its path
@@ -212,12 +211,10 @@ export default class HugoPublishPlugin extends Plugin {
 					const img_name = hv["image"];
 					const img_f = this.app.metadataCache.getFirstLinkpathDest(img_name, f.path);
 					if (img_f) {
-						const src = path.join(this.base_path, img_f.path);
-						const dst = path.join(this.settings.get_static_abs_dir(), img_f.path);
-						await util.copy_file(src, dst);
-						const static_dir = this.settings.static_dir;
-						hv["image"] = encodeURI(path.join("/", static_dir, img_f.path).replace(/\\/g, '/'));
-						// re-stringify header with updated image path
+						const img_src = path.join(this.base_path, img_f.path);
+						const img_dst = path.join(this.settings.get_static_abs_dir(), img_f.path);
+						await util.copy_file(img_src, img_dst);
+						hv["image"] = encodeURI(path.join("/", this.settings.static_dir, img_f.path).replace(/\\/g, '/'));
 						header = stringifyYaml(hv);
 					}
 				}
@@ -302,6 +299,32 @@ export default class HugoPublishPlugin extends Plugin {
 						}
 					}
 				}.bind(this))
+
+				// Resolve <img src="..."> inside raw HTML nodes
+				// visit() does not support async callbacks, so collect nodes first
+				const html_nodes: any[] = [];
+				visit(ast, 'html', (node: any) => { html_nodes.push(node); });
+				for (const node of html_nodes) {
+					const img_regex = /(<img\b[^>]*?\ssrc=")([^"]+)(")/gi;
+					let result = node.value;
+					const replacements: Array<[string, string]> = [];
+					let m: RegExpExecArray | null;
+					while ((m = img_regex.exec(node.value)) !== null) {
+						const raw_src = decodeURI(m[2]);
+						const img_f = this.app.metadataCache.getFirstLinkpathDest(raw_src, f.path);
+						if (img_f) {
+							const img_src = path.join(this.base_path, img_f.path);
+							const img_dst = path.join(this.settings.get_static_abs_dir(), img_f.path);
+							await util.copy_file(img_src, img_dst);
+							const resolved = encodeURI(path.join("/", static_dir, img_f.path).replace(/\\/g, '/'));
+							replacements.push([m[2], resolved]);
+						}
+					}
+					for (const [orig, resolved] of replacements) {
+						result = result.replace(orig, resolved);
+					}
+					node.value = result;
+				}
 
 				// body = remark.stringify(ast);
 				body = toMarkdown(ast, { extensions: [mathToMarkdown(), gfmTableToMarkdown()] });
