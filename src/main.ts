@@ -119,6 +119,8 @@ export default class HugoPublishPlugin extends Plugin {
 		await util.delete_files_in_dir(this.settings.get_static_abs_dir());
 
 		const blogs = await util.get_all_blog_md(this.app, this.settings.blog_tag);
+		console.log("[HUGO] blogs found:", blogs.length);
+		console.log("[HUGO] sample blogs:", blogs.slice(0, 5).map(f => f.path));
 
 		// Get excluded directories
 		const exclude_dirs = this.settings.get_exclude_dir().map(v => v.endsWith('/') ? v : v + '/');
@@ -208,14 +210,30 @@ export default class HugoPublishPlugin extends Plugin {
 
 				// copy frontmatter image field to static dir and rewrite its path
 				if (hv && hv["image"]) {
-					const img_name = hv["image"];
-					const img_f = this.app.metadataCache.getFirstLinkpathDest(img_name, f.path);
-					if (img_f) {
-						const img_src = path.join(this.base_path, img_f.path);
-						const img_dst = path.join(this.settings.get_static_abs_dir(), img_f.path);
-						await util.copy_file(img_src, img_dst);
-						hv["image"] = encodeURI(path.join("/", this.settings.static_dir, img_f.path).replace(/\\/g, '/'));
-						header = stringifyYaml(hv);
+					let img_name = hv.image;
+
+					// normalize YAML weirdness
+					if (Array.isArray(img_name)) {
+						img_name = img_name[0];
+					}
+
+					if (typeof img_name !== "string") {
+						console.warn("[HUGO] skipping invalid image field:", img_name);
+					} else {
+						const img_f = this.app.metadataCache.getFirstLinkpathDest(img_name, f.path);
+
+						if (img_f) {
+							const img_src = path.join(this.base_path, img_f.path);
+							const img_dst = path.join(this.settings.get_static_abs_dir(), img_f.path);
+
+							await util.copy_file(img_src, img_dst);
+
+							hv["image"] = encodeURI(
+								path.join("/", this.settings.static_dir, img_f.path).replace(/\\/g, '/')
+							);
+
+							header = stringifyYaml(hv);
+						}
 					}
 				}
 				if (meta?.links) {
