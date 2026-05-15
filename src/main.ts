@@ -247,6 +247,11 @@ export default class HugoPublishPlugin extends Plugin {
 								} else {
 									link2path.set(v.link, [v.link, true]);
 								}
+							} else {
+								link2path.set(v.link, [link_f.path, false]);
+								const link_src = path.join(this.base_path, link_f.path);
+								const link_dst = path.join(this.settings.get_static_abs_dir(), link_f.path);
+								await util.copy_file(link_src, link_dst);
 							}
 						}
 					}
