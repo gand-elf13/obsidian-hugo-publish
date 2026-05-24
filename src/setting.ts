@@ -68,26 +68,8 @@ export class HugoPublishSettingTab extends PluginSettingTab {
 
         containerEl.empty();
 
-        new Setting(containerEl)
-            .setName('blog tag')
-            .setDesc('All articles with this tag are treated as blogs, if empty process all articles')
-            .addText(text => text
-                .setPlaceholder('Enter your secret')
-                .setValue(this.plugin.settings.blog_tag)
-                .onChange(async (value) => {
-                    this.plugin.settings.blog_tag = value;
-                    await this.plugin.saveSettings();
-                }));
-        new Setting(containerEl).setName("export blog tag").setDesc("Export ${blog tag} to hugo md file's header")
-            .addToggle(toggle => toggle.setValue(this.plugin.settings.export_blog_tag).onChange(async (value) => {
-                this.plugin.settings.export_blog_tag = value;
-                await this.plugin.saveSettings();
-            }));
-        new Setting(containerEl).setName("exclude dir").setDesc('Exclude dir when syncing, relative path to vault, split by ","')
-            .addText(text => text.setPlaceholder("templates,dir2,tmp/dir3").setValue(this.plugin.settings.exclude_dir).onChange(async (value) => {
-                this.plugin.settings.exclude_dir = value;
-                await this.plugin.saveSettings();
-            }))
+        containerEl.createEl('h2', { text: 'Hugo Location' });
+
         new Setting(containerEl).setName("site dir").setDesc("Hugo site root dir, absolute path")
             .addText(text => text.setPlaceholder("/path/to/hugo/site").setValue(this.plugin.settings.site_dir).onChange(async (value) => {
                 this.plugin.settings.site_dir = value;
@@ -103,11 +85,37 @@ export class HugoPublishSettingTab extends PluginSettingTab {
                 this.plugin.settings.static_dir = value;
                 await this.plugin.saveSettings();
             }));
+
+        containerEl.createEl('h2', { text: 'Content Selection' });
+
+        new Setting(containerEl)
+            .setName('blog tag')
+            .setDesc('All articles with this tag are treated as blogs, if empty process all articles')
+            .addText(text => text
+                .setPlaceholder('Enter your secret')
+                .setValue(this.plugin.settings.blog_tag)
+                .onChange(async (value) => {
+                    this.plugin.settings.blog_tag = value;
+                    await this.plugin.saveSettings();
+                }));
+        new Setting(containerEl).setName("exclude dir").setDesc('Exclude dir when syncing, relative path to vault, split by ","')
+            .addText(text => text.setPlaceholder("templates,dir2,tmp/dir3").setValue(this.plugin.settings.exclude_dir).onChange(async (value) => {
+                this.plugin.settings.exclude_dir = value;
+                await this.plugin.saveSettings();
+            }))
         new Setting(containerEl).setName("blog dir keep list").setDesc('Optional, do not delete matching files, use js regexp and split by ",". e.g. .*\\.html,.*\\.toml')
             .addText(text => text.setValue(this.plugin.settings.keep_list).onChange(async (value) => {
                 this.plugin.settings.keep_list = value;
                 await this.plugin.saveSettings();
             }));
+        new Setting(containerEl).setName("export blog tag").setDesc("Export ${blog tag} to hugo md file's header")
+            .addToggle(toggle => toggle.setValue(this.plugin.settings.export_blog_tag).onChange(async (value) => {
+                this.plugin.settings.export_blog_tag = value;
+                await this.plugin.saveSettings();
+            }));
+
+        containerEl.createEl('h2', { text: 'Export Features' });
+
 		new Setting(containerEl)
 			.setName("slugify paths")
 			.setDesc("Convert link paths to Hugo-compatible slugs (lowercase, spaces to hyphens). Enable if your Hugo site uses default permalink settings.")
