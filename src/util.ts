@@ -201,6 +201,67 @@ const transform_wiki_image_on_parent = (node: Parent) => {
     node.children = new_children;
 }
 
+export const resolvePermalink = (pattern: string, resolvedPath: string, targetHv: any): string => {
+    if (!pattern) return resolvedPath;
+
+    // Plain string without tokens → prepend as prefix (old content_root behavior)
+    if (!/:[a-zA-Z]/.test(pattern)) {
+        const clean = pattern.replace(/^\/|\/$/g, '');
+        return clean ? clean + '/' + resolvedPath : resolvedPath;
+    }
+
+    const parts = resolvedPath.split('/');
+    const filename = parts[parts.length - 1] || '';
+    const title = targetHv?.title || filename;
+    const slug = targetHv?.slug || title;
+    const section = parts.length > 1 ? parts[0] : '';
+    const sections = parts.slice(0, parts.length - 1).join('/');
+
+    let result = pattern;
+
+    const tokenValues: Record<string, string> = {
+        ':slug': slug,
+        ':title': title,
+        ':section': section,
+        ':sections': sections,
+        ':filename': filename,
+    };
+
+    const rawDate = targetHv?.date;
+    if (rawDate) {
+        let date: Date | null = null;
+        if (rawDate instanceof Date) {
+            date = rawDate;
+        } else {
+            const d = new Date(rawDate);
+            if (!isNaN(d.getTime())) date = d;
+        }
+        if (date) {
+            const pad = (n: number) => String(n).padStart(2, '0');
+            tokenValues[':year'] = String(date.getFullYear());
+            tokenValues[':month'] = pad(date.getMonth() + 1);
+            tokenValues[':monthname'] = date.toLocaleString('en-US', { month: 'long' });
+            tokenValues[':day'] = pad(date.getDate());
+            tokenValues[':weekday'] = String(date.getDay());
+            tokenValues[':weekdayname'] = date.toLocaleString('en-US', { weekday: 'long' });
+            const startOfYear = new Date(date.getFullYear(), 0, 0);
+            const diff = date.getTime() - startOfYear.getTime();
+            tokenValues[':yearday'] = String(Math.ceil(diff / 86400000));
+        }
+    }
+
+    // Sort tokens by length descending so longer tokens match before shorter ones
+    // e.g. :sections before :section, :monthname before :month
+    const sortedTokens = Object.keys(tokenValues).sort((a, b) => b.length - a.length);
+    for (const token of sortedTokens) {
+        result = result.split(token).join(tokenValues[token]);
+    }
+
+    result = result.replace(/\/+/g, '/').replace(/^\/|\/$/g, '');
+
+    return result || resolvedPath;
+}
+
 const transform_wiki_link_on_parent = (node: Parent) => {
     const new_children = [];
     for (let i = 0; i < node.children.length; i++) {

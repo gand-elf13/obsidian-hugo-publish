@@ -12,8 +12,7 @@ export interface HugoPublishSettings {
     static_dir: string; // relative path to site_dir/static
     keep_list: string;
     slugify_paths: boolean;
-    content_root: string;
-    resolve_full_path: boolean;
+    permalink_pattern: string;
     export_media: boolean;
     convert_wikilinks: boolean;
     render_math: boolean;
@@ -55,8 +54,7 @@ export const DEFAULT_SETTINGS: HugoPublishSettings = {
     },
     export_blog_tag: true,
     slugify_paths: false,
-    content_root: "",
-    resolve_full_path: false,
+    permalink_pattern: "",
     export_media: true,
     convert_wikilinks: true,
     render_math: true,
@@ -135,25 +133,15 @@ export class HugoPublishSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName("content root")
-			.setDesc("Prepend this path to all internal links. Use if your content lives in a subdirectory (e.g. 'post'). Leave empty if content is at site root.")
+			.setName("permalink pattern")
+			.setDesc("URL pattern for internal links. Use tokens like :slug, :title, :section, :sections, :filename, :year, :month, :day. Leave empty for no modification. Plain text works as a prefix (e.g. 'post' → /post/note-name/).")
 			.addText(text => text
-				.setPlaceholder("post")
-				.setValue(this.plugin.settings.content_root)
+				.setPlaceholder(":section/:slug")
+				.setValue(this.plugin.settings.permalink_pattern)
 				.onChange(async (value) => {
-					this.plugin.settings.content_root = value;
+					this.plugin.settings.permalink_pattern = value;
 					await this.plugin.saveSettings();
 				}));
-		new Setting(containerEl)
-			.setName("resolve full path")
-			.setDesc("Resolve wikilinks to their full vault path instead of just the note name. Enable if your Hugo content is organized in subdirectories (e.g. post/my-note instead of my-note).")
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.resolve_full_path)
-				.onChange(async (value) => {
-					this.plugin.settings.resolve_full_path = value;
-					await this.plugin.saveSettings();
-				}));
-
 		new Setting(containerEl)
 			.setName("export media files")
 			.setDesc("Copy embedded images, PDFs, and other linked non-markdown files to the Hugo static directory.")

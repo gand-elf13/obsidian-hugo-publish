@@ -254,23 +254,21 @@ export default class HugoPublishPlugin extends Plugin {
 									const url = String(targetHv.url).replace(/^\/|\/$/g, '');
 									link2path.set(v.link, [url, true, true]);
 								} else {
-									if (this.settings.resolve_full_path) {
-										let resolved_path = link_f.path.replace(/\.md$/, "");
-										if (targetHv?.slug) {
-											const parts = resolved_path.split('/');
-											parts[parts.length - 1] = String(targetHv.slug);
-											resolved_path = parts.join('/');
-										}
-										link2path.set(v.link, [resolved_path, true, false]);
-									} else {
-										let link_name = v.link;
-										if (targetHv?.slug) {
-											const parts = link_name.split('/');
-											parts[parts.length - 1] = String(targetHv.slug);
-											link_name = parts.join('/');
-										}
-										link2path.set(v.link, [link_name, true, false]);
+									const needsSection = /:(section|sections)\b/.test(this.settings.permalink_pattern || '');
+									const base = needsSection
+										? link_f.path.replace(/\.md$/, "")
+										: v.link;
+
+									let resolved = base;
+									if (targetHv?.slug) {
+										const parts = resolved.split('/');
+										parts[parts.length - 1] = String(targetHv.slug);
+										resolved = parts.join('/');
 									}
+									if (this.settings.permalink_pattern) {
+										resolved = util.resolvePermalink(this.settings.permalink_pattern, resolved, targetHv);
+									}
+									link2path.set(v.link, [resolved, true, false]);
 								}
 							} else if (this.settings.export_media) {
 								link2path.set(v.link, [link_f.path, false, false]);
@@ -335,12 +333,6 @@ export default class HugoPublishPlugin extends Plugin {
 										)
 										.join('/');
 								}
-
-								// prepend content root if set
-								const root = this.settings.content_root.replace(/^\/|\/$/g, '');
-								if (root.length > 0) {
-									resolved = root + '/' + resolved;
-								}
 							}
 
 							node.url = encodeURI(path.join("/", resolved).replace(/\\/g, '/'));
@@ -388,7 +380,12 @@ export default class HugoPublishPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const data = await this.loadData();
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
+		// migrate old content_root to permalink_pattern
+		if (!this.settings.permalink_pattern && data?.content_root) {
+			this.settings.permalink_pattern = data.content_root;
+		}
 	}
 
 	async saveSettings() {
