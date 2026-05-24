@@ -45,7 +45,7 @@ Settings that map 1:1 to Hugo configuration options:
 | `disable_path_to_lower` | `disablePathToLower` | bool | `false` | ✅ |
 | `ugly_urls` | `uglyURLs` | bool | `false` | ✅ |
 | `remove_path_accents` | `removePathAccents` | bool | `false` | ✅ |
-| `permalink_pattern` | `[permalinks]` (pattern) | string | `:sections/:slug` | ✅ |
+| `permalink_pattern` | `[permalinks]` (pattern) | string | `:sections/:contentbasename` | ✅ |
 
 Not covered (handled by Hugo at build time — out of plugin scope):
 

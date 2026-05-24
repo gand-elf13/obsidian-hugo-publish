@@ -202,7 +202,7 @@ const transform_wiki_image_on_parent = (node: Parent) => {
 }
 
 export const resolvePermalink = (pattern: string, resolvedPath: string, targetHv: any): string => {
-    if (!pattern) pattern = ":sections/:slug";
+    if (!pattern) pattern = ":sections/:contentbasename";
     if (!/:[a-zA-Z]/.test(pattern)) return resolvedPath;
 
     const parts = resolvedPath.split('/');

@@ -256,7 +256,7 @@ export default class HugoPublishPlugin extends Plugin {
 									const url = String(targetHv.url).replace(/^\/|\/$/g, '');
 									link2path.set(v.link, [url, true, true]);
 								} else {
-									const effectivePattern = this.settings.permalink_pattern || ":sections/:slug";
+									const effectivePattern = this.settings.permalink_pattern || ":sections/:contentbasename";
 									const needsSection = /:(section|sections)\b/.test(effectivePattern);
 									const base = needsSection
 										? link_f.path.replace(/\.md$/, "")

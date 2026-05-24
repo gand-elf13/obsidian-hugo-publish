@@ -60,7 +60,7 @@ export const DEFAULT_SETTINGS: HugoPublishSettings = {
     disable_path_to_lower: false,
     ugly_urls: false,
     remove_path_accents: false,
-    permalink_pattern: ":sections/:slug",
+    permalink_pattern: ":sections/:contentbasename",
     export_media: true,
     export_yaml_image: true,
     export_html_images: true,
@@ -164,7 +164,7 @@ export class HugoPublishSettingTab extends PluginSettingTab {
 			.setName("permalink pattern")
 			.setDesc((() => {
 				const frag = document.createDocumentFragment();
-				frag.append("URL pattern using tokens like :sections, :slug, :title, :year, :month, :day. Empty defaults to :sections/:slug. Use :slug for flat URLs without sections. ");
+				frag.append("URL pattern using tokens like :sections, :slug, :title, :contentbasename, :year, :month, :day. Defaults to Hugo\u2019s filename-based :sections/:contentbasename. Use :slug for title-based URLs like Hugo\u2019s [permalinks] behavior. ");
 				const link = frag.appendChild(document.createElement('a'));
 				link.href = 'https://gohugo.io/content-management/urls/';
 				link.text = 'Hugo URL docs';
@@ -172,7 +172,7 @@ export class HugoPublishSettingTab extends PluginSettingTab {
 				return frag;
 			})())
 			.addText(text => text
-				.setPlaceholder(":sections/:slug")
+				.setPlaceholder(":sections/:contentbasename")
 				.setValue(this.plugin.settings.permalink_pattern)
 				.onChange(async (value) => {
 					this.plugin.settings.permalink_pattern = value;
