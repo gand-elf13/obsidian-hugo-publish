@@ -202,13 +202,8 @@ const transform_wiki_image_on_parent = (node: Parent) => {
 }
 
 export const resolvePermalink = (pattern: string, resolvedPath: string, targetHv: any): string => {
-    if (!pattern) return resolvedPath;
-
-    // Plain string without tokens → prepend as prefix (old content_root behavior)
-    if (!/:[a-zA-Z]/.test(pattern)) {
-        const clean = pattern.replace(/^\/|\/$/g, '');
-        return clean ? clean + '/' + resolvedPath : resolvedPath;
-    }
+    if (!pattern) pattern = ":sections/:slug";
+    if (!/:[a-zA-Z]/.test(pattern)) return resolvedPath;
 
     const parts = resolvedPath.split('/');
     const filename = parts[parts.length - 1] || '';

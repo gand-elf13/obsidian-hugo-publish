@@ -254,7 +254,8 @@ export default class HugoPublishPlugin extends Plugin {
 									const url = String(targetHv.url).replace(/^\/|\/$/g, '');
 									link2path.set(v.link, [url, true, true]);
 								} else {
-									const needsSection = /:(section|sections)\b/.test(this.settings.permalink_pattern || '');
+									const effectivePattern = this.settings.permalink_pattern || ":sections/:slug";
+									const needsSection = /:(section|sections)\b/.test(effectivePattern);
 									const base = needsSection
 										? link_f.path.replace(/\.md$/, "")
 										: v.link;
@@ -265,9 +266,7 @@ export default class HugoPublishPlugin extends Plugin {
 										parts[parts.length - 1] = String(targetHv.slug);
 										resolved = parts.join('/');
 									}
-									if (this.settings.permalink_pattern) {
-										resolved = util.resolvePermalink(this.settings.permalink_pattern, resolved, targetHv);
-									}
+									resolved = util.resolvePermalink(effectivePattern, resolved, targetHv);
 									link2path.set(v.link, [resolved, true, false]);
 								}
 							} else if (this.settings.export_media) {

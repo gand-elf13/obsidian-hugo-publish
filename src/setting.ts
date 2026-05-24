@@ -54,7 +54,7 @@ export const DEFAULT_SETTINGS: HugoPublishSettings = {
     },
     export_blog_tag: true,
     slugify_paths: false,
-    permalink_pattern: "",
+    permalink_pattern: ":sections/:slug",
     export_media: true,
     convert_wikilinks: true,
     render_math: true,
@@ -134,7 +134,15 @@ export class HugoPublishSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("permalink pattern")
-			.setDesc("URL pattern for internal links. Use tokens like :slug, :title, :section, :sections, :filename, :year, :month, :day. Leave empty for no modification. Plain text works as a prefix (e.g. 'post' → /post/note-name/).")
+			.setDesc((() => {
+				const frag = document.createDocumentFragment();
+				frag.append("URL pattern using tokens like :sections, :slug, :title, :year, :month, :day. Empty defaults to :sections/:slug. Use :slug for flat URLs without sections. ");
+				const link = frag.appendChild(document.createElement('a'));
+				link.href = 'https://gohugo.io/content-management/urls/';
+				link.text = 'Hugo URL docs';
+				link.target = '_blank';
+				return frag;
+			})())
 			.addText(text => text
 				.setPlaceholder(":sections/:slug")
 				.setValue(this.plugin.settings.permalink_pattern)
