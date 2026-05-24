@@ -191,8 +191,8 @@ export default class HugoPublishPlugin extends Plugin {
 
 			const meta = this.app.metadataCache.getFileCache(f);
 
-			// link -> path,is_md
-			const link2path: Map<string, [string, boolean]> = new Map();
+			// link -> path,is_md,skip_transforms
+			const link2path: Map<string, [string, boolean, boolean]> = new Map();
 
 			const abf = this.app.vault.getAbstractFileByPath(f.path);
 			// copy files to blog dir
@@ -205,7 +205,7 @@ export default class HugoPublishPlugin extends Plugin {
 					for (const v of meta.embeds) {
 						const embed_f = this.app.metadataCache.getFirstLinkpathDest(v.link, f.path);
 						if (embed_f) {
-							link2path.set(v.link, [embed_f.path, false]);
+							link2path.set(v.link, [embed_f.path, false, false]);
 							const src = path.join(this.base_path, embed_f.path);
 							const dst = path.join(this.settings.get_static_abs_dir(), embed_f.path);
 							//console.log(`copy ${src} to ${dst}`);
@@ -247,14 +247,33 @@ export default class HugoPublishPlugin extends Plugin {
 						const link_f = this.app.metadataCache.getFirstLinkpathDest(v.link, f.path);
 						if (link_f) {
 							if (link_f.path.endsWith(".md")) {
-								if (this.settings.resolve_full_path) {
-									const resolved_path = link_f.path.replace(/\.md$/, "");
-									link2path.set(v.link, [resolved_path, true]);
+								const targetCache = this.app.metadataCache.getFileCache(link_f);
+								const targetHv = targetCache?.frontmatter;
+
+								if (targetHv?.url) {
+									const url = String(targetHv.url).replace(/^\/|\/$/g, '');
+									link2path.set(v.link, [url, true, true]);
 								} else {
-									link2path.set(v.link, [v.link, true]);
+									if (this.settings.resolve_full_path) {
+										let resolved_path = link_f.path.replace(/\.md$/, "");
+										if (targetHv?.slug) {
+											const parts = resolved_path.split('/');
+											parts[parts.length - 1] = String(targetHv.slug);
+											resolved_path = parts.join('/');
+										}
+										link2path.set(v.link, [resolved_path, true, false]);
+									} else {
+										let link_name = v.link;
+										if (targetHv?.slug) {
+											const parts = link_name.split('/');
+											parts[parts.length - 1] = String(targetHv.slug);
+											link_name = parts.join('/');
+										}
+										link2path.set(v.link, [link_name, true, false]);
+									}
 								}
 							} else if (this.settings.export_media) {
-								link2path.set(v.link, [link_f.path, false]);
+								link2path.set(v.link, [link_f.path, false, false]);
 								const link_src = path.join(this.base_path, link_f.path);
 								const link_dst = path.join(this.settings.get_static_abs_dir(), link_f.path);
 								await util.copy_file(link_src, link_dst);
@@ -300,26 +319,28 @@ export default class HugoPublishPlugin extends Plugin {
 					const decoded_url = decodeURI(node.url);
 					const v = link2path.get(decoded_url);
 					if (v) {
-						const [vv, is_md] = v;
+						const [vv, is_md, skipTransforms] = v;
 						if (is_md) {
 							let resolved = vv;
 
-							// apply slugification if enabled
-							if (this.settings.slugify_paths) {
-								resolved = resolved
-									.split('/')
-									.map((segment: string) => segment
-										.toLowerCase()
-										.replace(/\s+/g, '-')
-										.replace(/[(),.]/g, '')
-									)
-									.join('/');
-							}
+							if (!skipTransforms) {
+								// apply slugification if enabled
+								if (this.settings.slugify_paths) {
+									resolved = resolved
+										.split('/')
+										.map((segment: string) => segment
+											.toLowerCase()
+											.replace(/\s+/g, '-')
+											.replace(/[(),.]/g, '')
+										)
+										.join('/');
+								}
 
-							// prepend content root if set
-							const root = this.settings.content_root.replace(/^\/|\/$/g, '');
-							if (root.length > 0) {
-								resolved = root + '/' + resolved;
+								// prepend content root if set
+								const root = this.settings.content_root.replace(/^\/|\/$/g, '');
+								if (root.length > 0) {
+									resolved = root + '/' + resolved;
+								}
 							}
 
 							node.url = encodeURI(path.join("/", resolved).replace(/\\/g, '/'));
