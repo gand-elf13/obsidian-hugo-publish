@@ -181,8 +181,10 @@ export default class HugoPublishPlugin extends Plugin {
 
 			//console.log("ast", ast)
 			if (this.settings.convert_wikilinks) {
-				util.transform_wiki_image(ast);
 				util.transform_wiki_link(ast);
+			}
+			if (this.settings.export_media) {
+				util.transform_wiki_image(ast);
 			}
 			if (this.settings.render_math) {
 				util.transform_better_latex(ast);
@@ -215,7 +217,7 @@ export default class HugoPublishPlugin extends Plugin {
 				}
 
 				// copy frontmatter image field to static dir and rewrite its path
-				if (this.settings.export_media && hv && hv["image"]) {
+				if (this.settings.export_yaml_image && hv && hv["image"]) {
 					let img_name = hv.image;
 
 					// normalize YAML weirdness
@@ -348,7 +350,7 @@ export default class HugoPublishPlugin extends Plugin {
 
 				// Resolve <img src="..."> inside raw HTML nodes
 				// visit() does not support async callbacks, so collect nodes first
-				if (this.settings.export_media) {
+				if (this.settings.export_html_images) {
 				const html_nodes: any[] = [];
 				visit(ast, 'html', (node: any) => { html_nodes.push(node); });
 				for (const node of html_nodes) {

@@ -16,6 +16,8 @@ export interface HugoPublishSettings {
     remove_path_accents: boolean;
     permalink_pattern: string;
     export_media: boolean;
+    export_yaml_image: boolean;
+    export_html_images: boolean;
     convert_wikilinks: boolean;
     render_math: boolean;
     inject_dates: boolean;
@@ -60,6 +62,8 @@ export const DEFAULT_SETTINGS: HugoPublishSettings = {
     remove_path_accents: false,
     permalink_pattern: ":sections/:slug",
     export_media: true,
+    export_yaml_image: true,
+    export_html_images: true,
     convert_wikilinks: true,
     render_math: true,
     inject_dates: true
@@ -174,6 +178,7 @@ export class HugoPublishSettingTab extends PluginSettingTab {
 					this.plugin.settings.permalink_pattern = value;
 					await this.plugin.saveSettings();
 				}));
+
 		new Setting(containerEl)
 			.setName("export media files")
 			.setDesc("Copy embedded images, PDFs, and other linked non-markdown files to the Hugo static directory.")
@@ -211,6 +216,28 @@ export class HugoPublishSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.inject_dates)
 				.onChange(async (value) => {
 					this.plugin.settings.inject_dates = value;
+					await this.plugin.saveSettings();
+				}));
+
+		containerEl.createEl('h2', { text: 'Chronicler Features' });
+
+		new Setting(containerEl)
+			.setName("export YAML image field")
+			.setDesc("Copy and rewrite the frontmatter image property. Disable if chronicler handles this.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.export_yaml_image)
+				.onChange(async (value) => {
+					this.plugin.settings.export_yaml_image = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName("export HTML image tags")
+			.setDesc("Copy and rewrite <img src=\"...\"> inside raw HTML nodes. Disable if chronicler handles this.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.export_html_images)
+				.onChange(async (value) => {
+					this.plugin.settings.export_html_images = value;
 					await this.plugin.saveSettings();
 				}));
     }
