@@ -136,7 +136,7 @@ export class HugoPublishSettingTab extends PluginSettingTab {
 			.setName("permalink pattern")
 			.setDesc("URL pattern for internal links. Use tokens like :slug, :title, :section, :sections, :filename, :year, :month, :day. Leave empty for no modification. Plain text works as a prefix (e.g. 'post' → /post/note-name/).")
 			.addText(text => text
-				.setPlaceholder(":section/:slug")
+				.setPlaceholder(":sections/:slug")
 				.setValue(this.plugin.settings.permalink_pattern)
 				.onChange(async (value) => {
 					this.plugin.settings.permalink_pattern = value;
