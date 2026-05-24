@@ -14,6 +14,10 @@ export interface HugoPublishSettings {
     slugify_paths: boolean;
     content_root: string;
     resolve_full_path: boolean;
+    export_media: boolean;
+    convert_wikilinks: boolean;
+    render_math: boolean;
+    inject_dates: boolean;
     get_exclude_dir: () => string[];
     get_blog_abs_dir: () => string;
     get_static_abs_dir: () => string;
@@ -52,7 +56,11 @@ export const DEFAULT_SETTINGS: HugoPublishSettings = {
     export_blog_tag: true,
     slugify_paths: false,
     content_root: "",
-    resolve_full_path: false
+    resolve_full_path: false,
+    export_media: true,
+    convert_wikilinks: true,
+    render_math: true,
+    inject_dates: true
 }
 
 export class HugoPublishSettingTab extends PluginSettingTab {
@@ -143,6 +151,46 @@ export class HugoPublishSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.resolve_full_path)
 				.onChange(async (value) => {
 					this.plugin.settings.resolve_full_path = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName("export media files")
+			.setDesc("Copy embedded images, PDFs, and other linked non-markdown files to the Hugo static directory.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.export_media)
+				.onChange(async (value) => {
+					this.plugin.settings.export_media = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName("convert wikilinks")
+			.setDesc("Convert Obsidian [[wikilinks]] to standard markdown links. Disable if your Hugo theme already supports wikilinks.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.convert_wikilinks)
+				.onChange(async (value) => {
+					this.plugin.settings.convert_wikilinks = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName("render math")
+			.setDesc("Convert $$LaTeX$$ expressions to Hugo-compatible HTML math blocks.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.render_math)
+				.onChange(async (value) => {
+					this.plugin.settings.render_math = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName("inject dates")
+			.setDesc("Auto-inject date and lastmod from file creation and modification timestamps when missing from frontmatter.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.inject_dates)
+				.onChange(async (value) => {
+					this.plugin.settings.inject_dates = value;
 					await this.plugin.saveSettings();
 				}));
     }

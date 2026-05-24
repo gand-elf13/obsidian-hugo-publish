@@ -148,11 +148,13 @@ export default class HugoPublishPlugin extends Plugin {
 					const creat_at = new Date(stat?.ctime).toISOString();
 					const modify_at = new Date(stat?.mtime).toISOString()
 					//console.log("process", f.path, "stat", stat, creat_at);
-					if (!("date" in hv)) {
-						hv["date"] = creat_at;
-					}
-					if (!("lastmod" in hv)) {
-						hv["lastmod"] = modify_at;
+					if (this.settings.inject_dates) {
+						if (!("date" in hv)) {
+							hv["date"] = creat_at;
+						}
+						if (!("lastmod" in hv)) {
+							hv["lastmod"] = modify_at;
+						}
 					}
 				}
 				if (!this.settings.export_blog_tag && this.settings.blog_tag.length > 0 && "tags" in hv) {
@@ -178,9 +180,13 @@ export default class HugoPublishPlugin extends Plugin {
 
 
 			//console.log("ast", ast)
-			util.transform_wiki_image(ast);
-			util.transform_wiki_link(ast);
-			util.transform_better_latex(ast);
+			if (this.settings.convert_wikilinks) {
+				util.transform_wiki_image(ast);
+				util.transform_wiki_link(ast);
+			}
+			if (this.settings.render_math) {
+				util.transform_better_latex(ast);
+			}
 
 
 			const meta = this.app.metadataCache.getFileCache(f);
@@ -194,7 +200,7 @@ export default class HugoPublishPlugin extends Plugin {
 				//const src = path.join(this.base_path, abf.path);
 				const dst = path.join(this.settings.get_blog_abs_dir(), f.path);
 
-				if (meta?.embeds) {
+				if (this.settings.export_media && meta?.embeds) {
 					// copy embeds to static dir
 					for (const v of meta.embeds) {
 						const embed_f = this.app.metadataCache.getFirstLinkpathDest(v.link, f.path);
@@ -209,7 +215,7 @@ export default class HugoPublishPlugin extends Plugin {
 				}
 
 				// copy frontmatter image field to static dir and rewrite its path
-				if (hv && hv["image"]) {
+				if (this.settings.export_media && hv && hv["image"]) {
 					let img_name = hv.image;
 
 					// normalize YAML weirdness
@@ -247,7 +253,7 @@ export default class HugoPublishPlugin extends Plugin {
 								} else {
 									link2path.set(v.link, [v.link, true]);
 								}
-							} else {
+							} else if (this.settings.export_media) {
 								link2path.set(v.link, [link_f.path, false]);
 								const link_src = path.join(this.base_path, link_f.path);
 								const link_dst = path.join(this.settings.get_static_abs_dir(), link_f.path);
@@ -325,6 +331,7 @@ export default class HugoPublishPlugin extends Plugin {
 
 				// Resolve <img src="..."> inside raw HTML nodes
 				// visit() does not support async callbacks, so collect nodes first
+				if (this.settings.export_media) {
 				const html_nodes: any[] = [];
 				visit(ast, 'html', (node: any) => { html_nodes.push(node); });
 				for (const node of html_nodes) {
@@ -347,6 +354,7 @@ export default class HugoPublishPlugin extends Plugin {
 						result = result.replace(orig, resolved);
 					}
 					node.value = result;
+				}
 				}
 
 				// body = remark.stringify(ast);
