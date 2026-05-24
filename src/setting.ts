@@ -11,7 +11,8 @@ export interface HugoPublishSettings {
     blog_dir: string; // relative path to site_dir
     static_dir: string; // relative path to site_dir/static
     keep_list: string;
-    slugify_paths: boolean;
+    disable_path_to_lower: boolean;
+    ugly_urls: boolean;
     permalink_pattern: string;
     export_media: boolean;
     convert_wikilinks: boolean;
@@ -53,7 +54,8 @@ export const DEFAULT_SETTINGS: HugoPublishSettings = {
         return regs;
     },
     export_blog_tag: true,
-    slugify_paths: false,
+    disable_path_to_lower: false,
+    ugly_urls: false,
     permalink_pattern: ":sections/:slug",
     export_media: true,
     convert_wikilinks: true,
@@ -123,12 +125,22 @@ export class HugoPublishSettingTab extends PluginSettingTab {
         containerEl.createEl('h2', { text: 'Export Features' });
 
 		new Setting(containerEl)
-			.setName("slugify paths")
-			.setDesc("Convert link paths to Hugo-compatible slugs (lowercase, spaces to hyphens). Enable if your Hugo site uses default permalink settings.")
+			.setName("disable path to lower")
+			.setDesc("Keep original letter casing in URLs instead of lowercasing. Spaces are still replaced with hyphens. Maps to Hugo\u2019s disablePathToLower.")
 			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.slugify_paths)
+				.setValue(this.plugin.settings.disable_path_to_lower)
 				.onChange(async (value) => {
-					this.plugin.settings.slugify_paths = value;
+					this.plugin.settings.disable_path_to_lower = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName("ugly URLs")
+			.setDesc("Append .html extension to URLs instead of trailing slashes. Maps to Hugo\u2019s uglyURLs.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.ugly_urls)
+				.onChange(async (value) => {
+					this.plugin.settings.ugly_urls = value;
 					await this.plugin.saveSettings();
 				}));
 

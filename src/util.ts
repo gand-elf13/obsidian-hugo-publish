@@ -206,9 +206,10 @@ export const resolvePermalink = (pattern: string, resolvedPath: string, targetHv
     if (!/:[a-zA-Z]/.test(pattern)) return resolvedPath;
 
     const parts = resolvedPath.split('/');
-    const filename = parts[parts.length - 1] || '';
-    const title = targetHv?.title || filename;
+    const contentbasename = parts[parts.length - 1] || '';
+    const title = targetHv?.title || contentbasename;
     const slug = targetHv?.slug || title;
+    const slugorcontentbasename = targetHv?.slug || contentbasename;
     const section = parts.length > 1 ? parts[0] : '';
     const sections = parts.slice(0, parts.length - 1).join('/');
 
@@ -219,7 +220,9 @@ export const resolvePermalink = (pattern: string, resolvedPath: string, targetHv
         ':title': title,
         ':section': section,
         ':sections': sections,
-        ':filename': filename,
+        ':filename': contentbasename,
+        ':contentbasename': contentbasename,
+        ':slugorcontentbasename': slugorcontentbasename,
     };
 
     const rawDate = targetHv?.date;

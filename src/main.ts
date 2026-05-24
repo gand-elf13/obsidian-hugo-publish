@@ -321,16 +321,18 @@ export default class HugoPublishPlugin extends Plugin {
 							let resolved = vv;
 
 							if (!skipTransforms) {
-								// apply slugification if enabled
-								if (this.settings.slugify_paths) {
-									resolved = resolved
-										.split('/')
-										.map((segment: string) => segment
-											.toLowerCase()
-											.replace(/\s+/g, '-')
-											.replace(/[(),.]/g, '')
-										)
-										.join('/');
+								resolved = resolved
+									.split('/')
+									.map((segment: string) => {
+										let s = segment.replace(/\s+/g, '-').replace(/[(),.]/g, '');
+										if (!this.settings.disable_path_to_lower) {
+											s = s.toLowerCase();
+										}
+										return s;
+									})
+									.join('/');
+								if (this.settings.ugly_urls) {
+									resolved = resolved + '.html';
 								}
 							}
 
@@ -384,6 +386,10 @@ export default class HugoPublishPlugin extends Plugin {
 		// migrate old content_root to permalink_pattern
 		if (!this.settings.permalink_pattern && data?.content_root) {
 			this.settings.permalink_pattern = data.content_root;
+		}
+		// migrate old slugify_paths to disable_path_to_lower (inverted logic)
+		if (data?.slugify_paths !== undefined) {
+			this.settings.disable_path_to_lower = !data.slugify_paths;
 		}
 	}
 
