@@ -328,6 +328,9 @@ export default class HugoPublishPlugin extends Plugin {
 										if (!this.settings.disable_path_to_lower) {
 											s = s.toLowerCase();
 										}
+										if (this.settings.remove_path_accents) {
+											s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+										}
 										return s;
 									})
 									.join('/');

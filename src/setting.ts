@@ -13,6 +13,7 @@ export interface HugoPublishSettings {
     keep_list: string;
     disable_path_to_lower: boolean;
     ugly_urls: boolean;
+    remove_path_accents: boolean;
     permalink_pattern: string;
     export_media: boolean;
     convert_wikilinks: boolean;
@@ -56,6 +57,7 @@ export const DEFAULT_SETTINGS: HugoPublishSettings = {
     export_blog_tag: true,
     disable_path_to_lower: false,
     ugly_urls: false,
+    remove_path_accents: false,
     permalink_pattern: ":sections/:slug",
     export_media: true,
     convert_wikilinks: true,
@@ -141,6 +143,16 @@ export class HugoPublishSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.ugly_urls)
 				.onChange(async (value) => {
 					this.plugin.settings.ugly_urls = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName("remove path accents")
+			.setDesc("Remove diacritics from URL paths (\u00E9 \u2192 e, \u00F1 \u2192 n). Maps to Hugo\u2019s removePathAccents.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.remove_path_accents)
+				.onChange(async (value) => {
+					this.plugin.settings.remove_path_accents = value;
 					await this.plugin.saveSettings();
 				}));
 
