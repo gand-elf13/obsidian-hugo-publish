@@ -180,11 +180,11 @@ export default class HugoPublishPlugin extends Plugin {
 
 
 			//console.log("ast", ast)
-			if (this.settings.convert_wikilinks) {
-				util.transform_wiki_link(ast);
-			}
 			if (this.settings.export_media) {
 				util.transform_wiki_image(ast);
+			}
+			if (this.settings.convert_wikilinks) {
+				util.transform_wiki_link(ast);
 			}
 			if (this.settings.render_math) {
 				util.transform_better_latex(ast);
